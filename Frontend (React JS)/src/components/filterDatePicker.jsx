@@ -1,0 +1,296 @@
+import { useState, useEffect, useRef } from "react";
+import {
+  format,
+  addMonths,
+  subMonths,
+  startOfMonth,
+  endOfMonth,
+  isSameDay,
+  isToday,
+} from "date-fns";
+import { id } from "date-fns/locale";
+import "@/styles/datepicker.css";
+import { SlCalender, SlArrowLeft, SlArrowRight } from "react-icons/sl";
+
+const FilterDatePicker = ({ value, onChange, className }) => {
+  const [selectedDate, setSelectedDate] = useState(
+    value ? new Date(value) : null
+  );
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const datePickerRef = useRef(null);
+
+  useEffect(() => {
+    if (value) {
+      setSelectedDate(new Date(value));
+    }
+  }, [value]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        datePickerRef.current &&
+        !datePickerRef.current.contains(event.target)
+      ) {
+        setIsCalendarOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleDateChange = (date) => {
+    const formattedDate = format(date, "yyyy-MM-dd");
+    setSelectedDate(date);
+    setIsCalendarOpen(false);
+    if (onChange) {
+      console.log("Tanggal yang dipilih di FilterDatePicker:", formattedDate);
+      onChange(formattedDate);
+    }
+  };
+
+  const formatDateDisplay = (date) => {
+    if (!date || isNaN(date)) return "Hari, tanggal bulan tahun";
+    return format(date, "EEEE, dd MMMM yyyy", { locale: id });
+  };
+
+  const renderDays = () => {
+    const startDate = startOfMonth(currentMonth);
+    const endDate = endOfMonth(currentMonth);
+    const days = [];
+
+    for (let i = 0; i < startDate.getDay(); i++) {
+      days.push(<div className="day empty" key={`empty-${i}`} />);
+    }
+
+    for (
+      let date = startDate;
+      date <= endDate;
+      date.setDate(date.getDate() + 1)
+    ) {
+      const day = new Date(date);
+      const isSelected = isSameDay(day, selectedDate);
+      const isCurrent = isToday(day);
+
+      days.push(
+        <div
+          key={day.toString()}
+          className={`day ${isSelected ? "selected" : ""} ${
+            isCurrent ? "today" : ""
+          }`}
+          onClick={() => handleDateChange(day)}
+        >
+          {day.getDate()}
+        </div>
+      );
+    }
+
+    return days;
+  };
+
+  return (
+    <div ref={datePickerRef} className={`relative ${className}`}>
+      <div className="relative">
+        <input
+          type="text"
+          className="form-datepicker w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 font-normal outline-none transition focus:border-primary cursor-pointer dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
+          value={formatDateDisplay(selectedDate)}
+          onClick={() => setIsCalendarOpen(!isCalendarOpen)}
+          readOnly
+        />
+        <div className="pointer-events-none absolute inset-0 left-auto right-5 flex items-center top-1/2 transform -translate-y-1/2">
+          <SlCalender />
+        </div>
+      </div>
+
+      {isCalendarOpen && (
+        <div className="calendar-popup absolute top-full mt-2 z-50">
+          <div className="calendar-header">
+            <button
+              type="button"
+              onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+            >
+              <SlArrowLeft />
+            </button>
+            <span>{format(currentMonth, "MMMM yyyy", { locale: id })}</span>
+            <button
+              type="button"
+              onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+            >
+              <SlArrowRight />
+            </button>
+          </div>
+          <div className="calendar-weekdays">
+            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
+              (day, index) => (
+                <div key={index} className="day weekday">
+                  {day}
+                </div>
+              )
+            )}
+          </div>
+          <div className="calendar-grid">{renderDays()}</div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export { FilterDatePicker };
+
+// import { useState, useEffect, useRef } from "react";
+// import {
+//   format,
+//   addMonths,
+//   subMonths,
+//   startOfMonth,
+//   endOfMonth,
+//   isSameDay,
+//   isToday,
+// } from "date-fns";
+// import { id } from "date-fns/locale";
+// import "@/styles/datepicker.css";
+// import { SlCalender, SlArrowLeft, SlArrowRight } from "react-icons/sl";
+
+// const FilterDatePicker = ({ value, onChange, className }) => {
+//   const [selectedDate, setSelectedDate] = useState(
+//     value ? new Date(value) : null
+//   );
+//   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+//   const [currentMonth, setCurrentMonth] = useState(new Date());
+//   const datePickerRef = useRef(null);
+
+//   // Sync initial value
+//   useEffect(() => {
+//     if (value) {
+//       setSelectedDate(new Date(value));
+//     }
+//   }, [value]);
+
+//   // Close calendar when clicking outside
+//   useEffect(() => {
+//     const handleClickOutside = (event) => {
+//       if (
+//         datePickerRef.current &&
+//         !datePickerRef.current.contains(event.target)
+//       ) {
+//         setIsCalendarOpen(false);
+//       }
+//     };
+
+//     document.addEventListener("mousedown", handleClickOutside);
+//     return () => {
+//       document.removeEventListener("mousedown", handleClickOutside);
+//     };
+//   }, []);
+
+//   // Handle date selection
+//   const handleDateChange = (date) => {
+//     setSelectedDate(date);
+//     setIsCalendarOpen(false);
+//     if (onChange) {
+//       onChange(date);
+//     }
+//   };
+
+//   // Format date for display
+//   const formatDateDisplay = (date) => {
+//     if (!date || isNaN(date)) return "Pilih tanggal";
+//     return format(date, "yyyy-MM-dd", { locale: id });
+//   };
+
+//   // Render days in the calendar
+//   const renderDays = () => {
+//     const startDate = startOfMonth(currentMonth);
+//     const endDate = endOfMonth(currentMonth);
+//     const days = [];
+
+//     for (let i = 0; i < startDate.getDay(); i++) {
+//       days.push(<div className="day empty" key={`empty-${i}`} />);
+//     }
+
+//     for (
+//       let date = new Date(startDate);
+//       date <= endDate;
+//       date.setDate(date.getDate() + 1)
+//     ) {
+//       const day = new Date(date);
+//       const isSelected = isSameDay(day, selectedDate);
+//       const isCurrent = isToday(day);
+
+//       days.push(
+//         <div
+//           key={day.toISOString()}
+//           className={`day ${isSelected ? "selected" : ""} ${
+//             isCurrent ? "today" : ""
+//           }`}
+//           onClick={() => handleDateChange(day)}
+//         >
+//           {day.getDate()}
+//         </div>
+//       );
+//     }
+
+//     return days;
+//   };
+
+//   return (
+//     <div ref={datePickerRef} className={`relative ${className}`}>
+//       {/* Input Field */}
+//       <div className="relative">
+//         <input
+//           type="text"
+//           className="form-datepicker w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 font-normal outline-none transition focus:border-primary cursor-pointer dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
+//           value={formatDateDisplay(selectedDate)}
+//           onClick={() => setIsCalendarOpen(!isCalendarOpen)}
+//           readOnly
+//         />
+//         <div className="pointer-events-none absolute inset-0 left-auto right-5 flex items-center top-1/2 transform -translate-y-1/2">
+//           <SlCalender />
+//         </div>
+//       </div>
+
+//       {/* Calendar Popup */}
+//       {isCalendarOpen && (
+//         <div className="calendar-popup absolute top-full mt-2 z-50">
+//           <div className="calendar-header flex justify-between items-center px-4 py-2">
+//             <button
+//               type="button"
+//               className="calendar-nav"
+//               onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+//             >
+//               <SlArrowLeft />
+//             </button>
+//             <span className="calendar-month font-medium">
+//               {format(currentMonth, "MMMM yyyy", { locale: id })}
+//             </span>
+//             <button
+//               type="button"
+//               className="calendar-nav"
+//               onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+//             >
+//               <SlArrowRight />
+//             </button>
+//           </div>
+//           <div className="calendar-weekdays grid grid-cols-7 text-center font-medium">
+//             {["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"].map(
+//               (day, index) => (
+//                 <div key={index} className="day weekday">
+//                   {day}
+//                 </div>
+//               )
+//             )}
+//           </div>
+//           <div className="calendar-grid grid grid-cols-7 gap-1">
+//             {renderDays()}
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
+// export { FilterDatePicker };
