@@ -93,7 +93,6 @@ const NominalStok = () => {
     try {
       setIsLoading(true);
       const result = await getStokById(id);
-      console.log("Fetched data:", result.data);
 
       if (result.data) {
         const data = result.data;
