@@ -3,6 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import { db_inventory } from "./config/database.js";
 import BaksoRoute from "./routes/router.js";
+import { PORT } from "./config/envConfig.js";
 
 (async () => {
   try {
@@ -24,4 +25,4 @@ app.use(
 app.use(cookieParser());
 app.use(BaksoRoute);
 
-app.listen(1010, () => console.log("Server up and running..."));
+app.listen(PORT, () => console.log("Server up and running..."));
