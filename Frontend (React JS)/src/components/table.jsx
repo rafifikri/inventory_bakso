@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { debounce } from "lodash";
+import { useForm } from "react-hook-form";
 import { IoSearch } from "react-icons/io5";
 import { FaPencil, FaTrashCan } from "react-icons/fa6";
 import {
@@ -17,6 +18,7 @@ import { useToast } from "@/utils/toastify/toastProvider";
 import { formatNumber } from "@/utils/formatter/formatNumber";
 import Pagination from "./Pagination";
 import SelectPerPage from "./SelectPerPage";
+import { Select } from "./forms/select";
 
 const Table = () => {
   const toast = useToast();
@@ -27,24 +29,34 @@ const Table = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
+  const [jenisBakso, setJenisBakso] = useState("");
+
+  const { register, setValue } = useForm({
+    defaultValues: {
+      jenisBakso: "",
+    },
+  });
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const page = parseInt(searchParams.get("page")) || 1;
     const limit = parseInt(searchParams.get("limit")) || 10;
     const search = searchParams.get("search") || "";
+    const jenis = searchParams.get("jenis-bakso") || "";
 
     setCurrentPage(page);
     setItemsPerPage(limit);
     setSearchTerm(search);
+    setJenisBakso(jenis);
+    setValue("jenisBakso", jenis);
 
     setIsLoading(true);
-    fetchData(page, limit, search);
+    fetchData(page, limit, search, jenis);
   }, [location.search]);
 
-  async function fetchData(page, limit, search) {
+  async function fetchData(page, limit, search, jenisBakso) {
     try {
-      const result = await getStokHarian(page, limit, search);
+      const result = await getStokHarian(page, limit, search, jenisBakso);
       setHasil(result);
     } catch (error) {
       toast.addToast({
@@ -110,12 +122,20 @@ const Table = () => {
     }
   }
 
+  const handleJenisBaksoChange = (e) => {
+    const value = e.target.value === "Tampilkan Semua" ? "" : e.target.value;
+    setJenisBakso(value);
+    setValue("jenisBakso", value);
+    fetchData(1, itemsPerPage, searchTerm, value);
+    updateURL(1, itemsPerPage, searchTerm, value);
+  };
+
   const debouncedSearch = useCallback(
     debounce((value) => {
-      fetchData(1, itemsPerPage, value);
-      updateURL(1, itemsPerPage, value);
+      fetchData(1, itemsPerPage, value, jenisBakso);
+      updateURL(1, itemsPerPage, value, jenisBakso);
     }, 800),
-    [itemsPerPage]
+    [itemsPerPage, jenisBakso]
   );
 
   const handleSearchChange = (e) => {
@@ -126,25 +146,25 @@ const Table = () => {
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
-    fetchData(page, itemsPerPage, searchTerm);
-    updateURL(page, itemsPerPage, searchTerm);
+    fetchData(page, itemsPerPage, searchTerm, jenisBakso);
+    updateURL(page, itemsPerPage, searchTerm, jenisBakso);
   };
 
   const handleItemsPerPageChange = (e) => {
     const limit = Number(e.target.value);
     setItemsPerPage(limit);
     setCurrentPage(1);
-    fetchData(1, limit, searchTerm);
-    updateURL(1, limit, searchTerm);
+    fetchData(1, limit, searchTerm, jenisBakso);
+    updateURL(1, limit, searchTerm, jenisBakso);
   };
 
-  const updateURL = (page, limit, search, date) => {
+  const updateURL = (page, limit, search, jenisBakso) => {
     const params = new URLSearchParams();
 
     if (page) params.set("page", page);
     if (limit) params.set("limit", limit);
     if (search) params.set("search", search);
-    if (date) params.set("date", date);
+    if (jenisBakso) params.set("jenis-bakso", jenisBakso);
 
     navigate(`?${params.toString()}`, { replace: true });
   };
@@ -152,8 +172,8 @@ const Table = () => {
   return (
     <div className="rounded-sm border border-stroke bg-white px-5 pt-6 pb-2.5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-5">
       <div className="mb-6">
-        <div className="relative flex items-center justify-between">
-          <div>
+        <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="relative w-full sm:max-w-[250px]">
             <button className="absolute left-0 top-1/2 -translate-y-1/2">
               <IoSearch className="size-5" />
             </button>
@@ -164,6 +184,22 @@ const Table = () => {
               className="w-full bg-transparent pl-7 pr-4 text-black focus:outline-none dark:text-white xl:w-125"
               value={searchTerm}
               onChange={handleSearchChange}
+            />
+          </div>
+
+          <div className="w-full sm:w-auto">
+            <Select
+              label="Jenis Bakso"
+              placeholder="Filter jenis bakso"
+              name="jenis"
+              options={[
+                "Tampilkan Semua",
+                "Bakso Polos",
+                "Bakso Daging",
+                "Bakso Urat",
+              ]}
+              register={register}
+              onChange={handleJenisBaksoChange}
             />
           </div>
         </div>
@@ -234,7 +270,7 @@ const Table = () => {
                     </td>
                     <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
                       <p className="text-black dark:text-white">
-                        {formatNumber(stok.produksi)} gram
+                        Rp {formatNumber(stok.produksi)}
                       </p>
                     </td>
                     <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
@@ -244,12 +280,12 @@ const Table = () => {
                     </td>
                     <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
                       <p className="text-black dark:text-white">
-                        Rp. {formatNumber(stok.hpp_lama)}
+                        Rp {formatNumber(stok.hpp_lama)}
                       </p>
                     </td>
                     <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
                       <p className="text-black dark:text-white">
-                        Rp. {formatNumber(stok.hpp_baru)}
+                        Rp {formatNumber(stok.hpp_baru)}
                       </p>
                     </td>
                     <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
@@ -259,7 +295,7 @@ const Table = () => {
                     </td>
                     <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
                       <p className="text-black dark:text-white">
-                        Rp. {formatNumber(stok.nominal_sisa_stok)}
+                        Rp {formatNumber(stok.nominal_sisa_stok)}
                       </p>
                     </td>
                     <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">

@@ -10,10 +10,15 @@ export const getLatestStok = async () => {
   }
 };
 
-export const getStokHarian = async (page = 1, limit = 10, search = "") => {
+export const getStokHarian = async (
+  page = 1,
+  limit = 10,
+  search = "",
+  jenisBakso = ""
+) => {
   try {
     const response = await axiosWithConfig.get(
-      `/stok-harian?page=${page}&limit=${limit}&search=${search}`
+      `/stok-harian?page=${page}&limit=${limit}&search=${search}&jenis-bakso=${jenisBakso}`
     );
     return response.data;
   } catch (error) {

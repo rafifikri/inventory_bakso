@@ -32,7 +32,7 @@ const Select = forwardRef((props, ref) => {
           defaultValue=""
           {...(register
             ? register(name, {
-                onChange, // Trigger manual onChange handler if provided
+                onChange,
               })
             : {})}
         >

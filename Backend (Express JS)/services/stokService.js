@@ -8,6 +8,7 @@ export const getStokHarianService = async (req) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
   const search = req.query.search || "";
+  const jenisBakso = req.query["jenis-bakso"] || "";
   const offset = (page - 1) * limit;
 
   const whereCondition = { user_id: req.user.id };
@@ -25,16 +26,22 @@ export const getStokHarianService = async (req) => {
     ];
   }
 
-  const response = await dataStok.findAndCountAll({
+  if (jenisBakso) {
+    whereCondition.jenis = { [Op.like]: `%${jenisBakso}%` };
+  }
+
+  const totalData = await dataStok.count({ where: whereCondition });
+
+  const response = await dataStok.findAll({
     where: whereCondition,
     limit: limit,
     offset: offset,
   });
 
   return {
-    data: response.rows,
-    totalCount: response.count,
-    totalPages: Math.ceil(response.count / limit),
+    data: response,
+    totalCount: totalData,
+    totalPages: Math.ceil(totalData / limit),
     currentPage: page,
   };
 };

@@ -278,7 +278,7 @@ const NominalStok = () => {
                 <div className="mb-6 flex flex-col gap-6 xl:flex-row">
                   <div className="w-full xl:w-1/2">
                     <label className="mb-3 block text-black dark:text-white">
-                      Jumlah Produksi (gram)
+                      Jumlah Produksi (Rp)
                       <span className="text-meta-1">*</span>
                     </label>
                     <Input
@@ -293,7 +293,8 @@ const NominalStok = () => {
 
                   <div className="w-full xl:w-1/2">
                     <label className="mb-3 block text-black dark:text-white">
-                      Kuantitas Bakso <span className="text-meta-1">*</span>
+                      Kuantitas Bakso (Pcs)
+                      <span className="text-meta-1">*</span>
                     </label>
                     <Input
                       id="kuantitas"
@@ -347,7 +348,7 @@ const NominalStok = () => {
                 <div className="mb-6 flex flex-col gap-6 xl:flex-row">
                   <div className="w-full xl:w-1/2">
                     <label className="mb-3 block text-black dark:text-white">
-                      Sisa Stok <span className="text-meta-1">*</span>
+                      Sisa Stok (Pcs)<span className="text-meta-1">*</span>
                     </label>
                     <Input
                       id="sisa_stok"
